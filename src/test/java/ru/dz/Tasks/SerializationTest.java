@@ -1,7 +1,11 @@
 package ru.dz.Tasks;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
+import ru.dz.News;
 
 import java.util.Optional;
 
@@ -57,6 +61,16 @@ public class SerializationTest {
         ParseNewsTask newTask = (ParseNewsTask) newTaskOpt.get();
         assertEquals("url", newTask.url);
         assertEquals("html", newTask.html);
+    }
+
+    @Test
+    public void NewsSerializationTest() throws JsonProcessingException {
+        News news = TestHelper.createNews();
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json = objectMapper.valueToTree(news).toString();
+        JsonNode node = objectMapper.readTree(json);
+        News n = objectMapper.treeToValue(node, News.class);
+        TestHelper.assertNews(n);
     }
 
 }
