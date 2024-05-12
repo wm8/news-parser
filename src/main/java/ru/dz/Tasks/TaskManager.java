@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rabbitmq.client.*;
+import ru.dz.Constants;
 import ru.dz.Daemon;
 import ru.dz.Main;
 import ru.dz.MyLogger;
@@ -23,7 +24,6 @@ public class TaskManager {
         put(Task.Type.PARSE_SECTION.getCode(), ParseSectionTask.class);
         put(Task.Type.PARSE_NEWS.getCode(), ParseNewsTask.class);
     }};
-    private static final String QUEUE_NAME = "tasks";
 
 
     public String taskToJsonString(Task task) {
@@ -50,10 +50,10 @@ public class TaskManager {
 
     private ConnectionFactory createConnection() {
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
-        factory.setPort(5672);
-        factory.setUsername("user123");
-        factory.setPassword("hard_password_345");
+        factory.setHost(Constants.RABBITMQ_HOST);
+        factory.setPort(Constants.RABBITMQ_PORT);
+        factory.setUsername(Constants.RABBITMQ_USER);
+        factory.setPassword(Constants.RABBITMQ_PASS);
         return factory;
     }
 
@@ -63,7 +63,7 @@ public class TaskManager {
              Channel channel = connection.createChannel()) {
             channel.basicQos(1);
             boolean autoAck = false;
-            GetResponse response = channel.basicGet(QUEUE_NAME, autoAck);
+            GetResponse response = channel.basicGet(Constants.RABBITMQ_QUEUE_NAME, autoAck);
             if (response == null) {
                 MyLogger.info("No tasks");
                 return Optional.empty();
@@ -85,7 +85,7 @@ public class TaskManager {
         try {
              try (Connection connection = factory.newConnection();
              Channel channel = connection.createChannel()) {
-                 channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+                 channel.queueDeclare(Constants.RABBITMQ_QUEUE_NAME, false, false, false, null);
                  MyLogger.info("Waiting for messages...");
                  AtomicReference<Optional<Task>> task = new AtomicReference<>(Optional.empty());
                  DeliverCallback deliverCallback = (consumerTag, delivery) -> {
@@ -99,7 +99,7 @@ public class TaskManager {
                  // Установка предварительного получения одного сообщения
                  channel.basicQos(1);
                  // Начать потребление сообщений из очереди
-                 channel.basicConsume(QUEUE_NAME, false, deliverCallback, consumerTag -> {
+                 channel.basicConsume(Constants.RABBITMQ_QUEUE_NAME, false, deliverCallback, consumerTag -> {
                      MyLogger.info("Cancel");
                  });
                  Thread.sleep(1000);
@@ -116,9 +116,9 @@ public class TaskManager {
         try {
             try (Connection connection = factory.newConnection();
                  Channel channel = connection.createChannel()) {
-                channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+                channel.queueDeclare(Constants.RABBITMQ_QUEUE_NAME, false, false, false, null);
                 String message = taskToJsonString(task);
-                channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
+                channel.basicPublish("", Constants.RABBITMQ_QUEUE_NAME, null, message.getBytes());
                 MyLogger.info("Sending task: %s", task.getType().toString());
             }
         } catch (IOException | TimeoutException e) {

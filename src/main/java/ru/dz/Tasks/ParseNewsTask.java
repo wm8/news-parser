@@ -24,11 +24,18 @@ public class ParseNewsTask extends Task {
 
     @Override
     public void run() {
-        Optional<News> news = RiaParser.parseNews(this.html, this.url);
-        news.ifPresent(value -> {
-            MyLogger.info("%s parsed successfully", value.url);
-            Daemon.getContainer().addNews(value);
-            MyLogger.info("Parsed %d news", Daemon.getContainer().getNewsCount());
-        });
+        try {
+            Optional<News> news = RiaParser.parseNews(this.html, this.url);
+            news.ifPresent(value -> {
+                MyLogger.info("%s parsed successfully", value.url);
+                if (Daemon.getElasticSearchManager().indexNews(value)) {
+                    MyLogger.info("News %s successfully saved", value.url);
+                } else {
+                    MyLogger.err("Error while saving %s", value.url);
+                }
+            });
+        } catch (Exception ex) {
+            MyLogger.logException(ex);
+        }
     }
 }

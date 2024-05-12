@@ -3,20 +3,17 @@ package ru.dz;
 import ru.dz.Tasks.Task;
 import ru.dz.Tasks.TaskManager;
 
-import java.util.ArrayList;
-import java.util.List;
+
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Daemon {
     private final ExecutorService executor;
     private final TaskManager taskManager;
-    private final NewsContainer container;
+    //private final NewsContainer container;
+    private final ElasticSearchManager esManager;
 
     private boolean shutDownFlag;
     private int noTaskCount;
@@ -24,9 +21,12 @@ public class Daemon {
     private static final int TIMEOUT = 1;
 
     public Daemon() {
+
         executor = Executors.newWorkStealingPool();
         taskManager = new TaskManager();
-        container = new NewsContainer();
+        //container = new NewsContainer();
+        esManager = new ElasticSearchManager(Constants.ES_SERVER_URL, Constants.ES_INDEX);
+        esManager.Init();
         noTaskCount = 0;
         if (instance == null) {
             instance = this;
@@ -49,9 +49,10 @@ public class Daemon {
         taskManager.addTask(task);
     }
 
-    public static NewsContainer getContainer() {
-        return Daemon.getInstance().container;
+    public static ElasticSearchManager getElasticSearchManager() {
+        return getInstance().esManager;
     }
+
 
     private boolean processingTask() {
         Optional<Task> task = this.taskManager.getTask();

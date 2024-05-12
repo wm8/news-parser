@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.commons.codec.binary.Hex;
 import ru.dz.Tasks.Task;
 
 import java.io.BufferedReader;
@@ -12,6 +13,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -56,5 +60,17 @@ public class Utils {
             return Optional.empty();
         }
     }
+    public static String getHash(String inp) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(inp.getBytes(StandardCharsets.UTF_8));
+            String idHash = Hex.encodeHexString(md.digest());
+            return idHash;
+        } catch (NoSuchAlgorithmException e) {
+            MyLogger.err("It's not possible...");
+            throw new RuntimeException(e);
+        }
+    }
+
 
 }
