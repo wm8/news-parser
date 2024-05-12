@@ -36,6 +36,7 @@ public class ElasticSearchManager {
         this.apiKey = "";
 
     }
+
     public void Init() {
         RestClient restClient = RestClient
                 .builder(HttpHost.create(serverUrl))
@@ -63,7 +64,7 @@ public class ElasticSearchManager {
         try {
             if (!checkIfIndexExists()) {
 
-                client.indices().create(i -> i.index(Constants.ES_INDEX)
+                client.indices().create(i -> i.index(INDEX_NAME)
                         .mappings(m -> m.properties("url", p -> p.keyword(d -> d))
                                 .properties("title", p -> p.keyword(d -> d))
                                 .properties("message", p -> p.keyword(d -> d))
@@ -176,4 +177,8 @@ public class ElasticSearchManager {
             return new ArrayList<>();
         }
     }
+
+    //Only for tests
+    @Deprecated
+    public ElasticsearchClient getClient () { return client; }
 }

@@ -17,4 +17,5 @@ public class TestHelper {
     public static News createNews() {
         return new News("url", "title", "message", 1L, "author");
     }
+
 }
