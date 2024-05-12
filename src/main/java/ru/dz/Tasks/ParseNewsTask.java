@@ -26,14 +26,14 @@ public class ParseNewsTask extends Task {
     public void run() {
         try {
             Optional<News> news = RiaParser.parseNews(this.html, this.url);
-            news.ifPresent(value -> {
+            news.ifPresentOrElse(value -> {
                 MyLogger.info("%s parsed successfully", value.url);
                 if (Daemon.getElasticSearchManager().indexNews(value)) {
                     MyLogger.info("News %s successfully saved", value.url);
                 } else {
                     MyLogger.err("Error while saving %s", value.url);
                 }
-            });
+            }, () -> Daemon.getElasticSearchManager().deleteNews(url));
         } catch (Exception ex) {
             MyLogger.logException(ex);
         }

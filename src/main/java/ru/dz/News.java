@@ -1,5 +1,6 @@
 package ru.dz;
 
+
 public class News {
     public String url;
     public String title;
@@ -13,6 +14,14 @@ public class News {
         this.message = message;
         this.time = time;
         this.author = author;
+    }
+    public News(String url) {
+        this.url = url;
+        this.title = "";
+        this.message = "";
+        this.time = 0L;
+        this.author = "";
+
     }
     private News() {
 

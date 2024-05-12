@@ -66,7 +66,7 @@ public class Daemon {
 
     public void runDaemon() {
         MyLogger.info("Running daemon...");
-        hookShutDownSignal();
+        //hookShutDownSignal();
         do {
             if (!this.processingTask()) {
                 this.sleep();
@@ -86,7 +86,14 @@ public class Daemon {
     }
 
     private void launchTask(Task newTask) {
-        /*Future<?> future =*/ executor.submit(newTask::run);
+        /*Future<?> future =*/
+        executor.submit(() -> {
+            try {
+                newTask.run();
+            } catch (Exception ex) {
+                MyLogger.logException(ex);
+            }}
+        );
 //        lock.writeLock().lock();
 //        futures.add(future);
 //        lock.writeLock().unlock();

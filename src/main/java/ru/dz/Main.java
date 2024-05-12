@@ -3,6 +3,8 @@ package ru.dz;
 import ru.dz.Tasks.DownloadPageTask;
 import ru.dz.Tasks.Task;
 
+import static java.lang.System.exit;
+
 public class Main {
     public static final String BASE_URL = "https://ria.ru/";
 
@@ -13,7 +15,8 @@ public class Main {
         daemon.runDaemon();
 
         var collection = Daemon.getElasticSearchManager().getNewsCollection(1000);
-        MyLogger.info("Saved %d news", collection.size());
+        MyLogger.info("News count in es: %d", collection.size());
+        exit(0);
     }
 
 }

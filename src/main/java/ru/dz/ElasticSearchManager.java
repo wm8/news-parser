@@ -1,7 +1,7 @@
 package ru.dz;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.core.ExistsRequest;
+import co.elastic.clients.elasticsearch._types.ShardStatistics;
 import co.elastic.clients.elasticsearch.core.GetResponse;
 import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -13,29 +13,18 @@ import co.elastic.clients.transport.rest_client.RestClientTransport;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.message.BasicHeader;
-import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
-import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.Index;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.client.indices.GetIndexResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class ElasticSearchManager {
-    private static Logger logger = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger(ElasticSearchManager.class);
     private ElasticsearchClient client;
     private final String INDEX_NAME;
     private final String serverUrl;
@@ -73,7 +62,16 @@ public class ElasticSearchManager {
     public boolean createIndex() {
         try {
             if (!checkIfIndexExists()) {
-                client.indices().create(c -> c.index(INDEX_NAME));
+
+                client.indices().create(i -> i.index(Constants.ES_INDEX)
+                        .mappings(m -> m.properties("url", p -> p.keyword(d -> d))
+                                .properties("title", p -> p.keyword(d -> d))
+                                .properties("message", p -> p.keyword(d -> d))
+                                .properties("author", p -> p.keyword(d -> d))
+                                .properties("title", p -> p.keyword(d -> d))
+                                .properties("time", p -> p.date(l -> l))
+                        )
+                );
                 logger.info(String.format("index %s successfully created!", INDEX_NAME));
                 MyLogger.info("ES index %s created", INDEX_NAME);
             } else {
@@ -107,12 +105,38 @@ public class ElasticSearchManager {
         }
     }
 
-    public void deleteIndex() throws IOException {
-        var response = client.indices().delete(i -> i.index(INDEX_NAME));
-        if (response.acknowledged()) {
-            logger.info(String.format("Index %s deleted successfully", INDEX_NAME));
-        } else {
-            logger.warn("Failed to delete index " + INDEX_NAME);
+    public void deleteIndex() {
+        try {
+            var response = client.indices().delete(i -> i.index(INDEX_NAME));
+            if (response.acknowledged()) {
+                logger.info(String.format("Index %s deleted successfully", INDEX_NAME));
+            } else {
+                logger.warn("Failed to delete index " + INDEX_NAME);
+            }
+        } catch (IOException e) {
+            MyLogger.logException(e);
+        }
+    }
+
+    private String constructFailureString(ShardStatistics shards) {
+        StringBuilder builder = new StringBuilder();
+        shards.failures().stream().map(x -> x.reason().reason())
+                .forEach(x -> builder.append(x).append('\n'));
+        return builder.toString();
+    }
+
+    public boolean deleteNews(String url) {
+        try {
+            var response = client.delete(d -> d.index(INDEX_NAME).id(Utils.getHash(url)));
+            boolean deleted = response.shards().total().longValue() == response.shards().successful().longValue();
+            if (!deleted) {
+                logger.error("Failure while deleting: " + constructFailureString(response.shards()));
+            }
+            return deleted;
+
+        } catch (IOException e) {
+            logger.error(e);
+            return false;
         }
     }
 

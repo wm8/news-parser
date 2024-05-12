@@ -1,6 +1,8 @@
 
 package ru.dz;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.concurrent.TimeUnit;
 
 
@@ -33,7 +35,13 @@ public final class MyLogger {
   }
 
   public static void logException(Throwable throwable) {
-    System.err.println("Exception happened!\n" + throwable.toString());
+    StringWriter writer = new StringWriter();
+    PrintWriter printWriter = new PrintWriter(writer);
+    throwable.printStackTrace(printWriter);
+    printWriter.flush();
+
+    String stackTrace = writer.toString();
+    System.err.println("Exception happened!\n" + throwable + "\n" + stackTrace);
   }
 
 }
