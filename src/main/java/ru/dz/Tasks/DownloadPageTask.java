@@ -25,17 +25,32 @@ public class DownloadPageTask extends Task {
 
     @Override
     public void run() {
-        Optional<String> data = Utils.getHtmlString(url);
-        if (data.isEmpty()) {
-            return;
-        }
-        String html = data.get();
+
         switch (nextTaskType) {
-            case PARSE_MAIN -> Daemon.addTask(new ParseMainTask(html, url));
-            case PARSE_SECTION -> Daemon.addTask(new ParseSectionTask(html));
+            case PARSE_MAIN -> {
+                Optional<String> data = Utils.getHtmlString(url);
+                if (data.isEmpty()) {
+                    return;
+                }
+                String html = data.get();
+                Daemon.addTask(new ParseMainTask(html, url));
+            }
+            case PARSE_SECTION -> {
+                Optional<String> data = Utils.getHtmlString(url);
+                if (data.isEmpty()) {
+                    return;
+                }
+                String html = data.get();
+                Daemon.addTask(new ParseSectionTask(html)); }
             case PARSE_NEWS -> {
                 if (Daemon.getElasticSearchManager().getDocumentByUrl(url).isEmpty()) {
                     Daemon.getElasticSearchManager().indexNews(new News(url));
+                    Optional<String> data = Utils.getHtmlString(url);
+                    if (data.isEmpty()) {
+                        Daemon.getElasticSearchManager().deleteNews(url);
+                        return;
+                    }
+                    String html = data.get();
                     Daemon.addTask(new ParseNewsTask(html, url));
                 } else {
                     MyLogger.info("%s has already parsed!", url);

@@ -66,8 +66,8 @@ public class ElasticSearchManager {
 
                 client.indices().create(i -> i.index(INDEX_NAME)
                         .mappings(m -> m.properties("url", p -> p.keyword(d -> d))
-                                .properties("title", p -> p.keyword(d -> d))
-                                .properties("message", p -> p.keyword(d -> d))
+                                .properties("title", p -> p.text(d -> d))
+                                .properties("message", p -> p.text(d -> d))
                                 .properties("author", p -> p.keyword(d -> d))
                                 .properties("title", p -> p.keyword(d -> d))
                                 .properties("time", p -> p.date(l -> l))

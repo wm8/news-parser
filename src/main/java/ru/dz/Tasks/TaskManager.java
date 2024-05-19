@@ -1,10 +1,14 @@
 package ru.dz.Tasks;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+//import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DeliverCallback;
+import com.rabbitmq.client.GetResponse;
 import ru.dz.Constants;
 import ru.dz.Daemon;
 import ru.dz.Main;
@@ -42,7 +46,7 @@ public class TaskManager {
             }
             Task task = (Task) objectMapper.treeToValue(node, taskFactory.get(taskType));
             return Optional.of(task);
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             MyLogger.logException(e);
             return Optional.empty();
         }
