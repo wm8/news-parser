@@ -38,7 +38,8 @@ services:
     ports:
       - 9200:9200
       - 9300:9300
-
+#    networks:
+#      - my_network
   kibana:
       container_name: kibana7
       image: kibana:7.17.9
@@ -48,6 +49,8 @@ services:
         - 5601:5601
       depends_on:
         - elasticsearch
+#      networks:
+#        - my_network
 
   logstash:
       container_name: logstash
@@ -63,15 +66,26 @@ services:
         - "9999:9999"
       environment:
         LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-      #   networks:
-      #     - elk
+#      networks:
+#        - my_network
       depends_on:
         - elasticsearch
+#  news-parser:
+#    depends_on:
+#      - rabbitmq
+#      - elasticsearch
+#      - logstash
+#    build:
+#      context: ../
+#      dockerfile: ./docker/parser/Dockerfile
+#    env_file:
+#      .env
+##    networks:
+##      - my_network
+
 volumes:
   elasticsearch-data:
     driver: local
 
 #networks:
 #  my_network:
-#    name: my_network
-#    driver: bridge

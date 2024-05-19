@@ -8,7 +8,9 @@ import static java.lang.System.exit;
 public class Main {
     public static final String BASE_URL = "https://ria.ru/";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
+        System.out.println("Starting after 10 s...");
+        Thread.sleep(10000);
         Constants.Init();
         Daemon daemon = new Daemon();
         Daemon.addTask(new DownloadPageTask(BASE_URL, Task.Type.PARSE_MAIN));
